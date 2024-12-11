@@ -39,79 +39,84 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void askNotificationPermission() {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
-                    PackageManager.PERMISSION_GRANTED
-            ) {
-                setContentView(R.layout.activity_main);
-                webDisplayer = findViewById(R.id.webview);
-                webDisplayer.setWebViewClient(new WebViewClient());
-                webDisplayer.getSettings().setUserAgentString(webDisplayer.getSettings().getUserAgentString().replace("; wv", ""));
-                webDisplayer.loadUrl("https://listenbeyond.com/app/full-audiobook");
-                webDisplayer.getSettings().setUserAgentString(webDisplayer.getSettings().getUserAgentString().replace("; wv", ""));
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            createWebview();
+        } else {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
+        }
+    }
 
-                webDisplayer.setWebChromeClient(new WebChromeClient() {
+    private void createWebview() {
+        setContentView(R.layout.activity_main);
+        webDisplayer = findViewById(R.id.webview);
+        webDisplayer.setWebViewClient(new WebViewClient());
+        webDisplayer.getSettings().setUserAgentString(webDisplayer.getSettings().getUserAgentString().replace("; wv", ""));
+        webDisplayer.loadUrl("https://listenbeyond.com/app/full-audiobook");
 
-                    @Override
-                    public void onProgressChanged(WebView view, int newProgress) {
-                        super.onProgressChanged(view, newProgress);
-                        if (newProgress == 100) {
-                            String code = "var mediaElement;" +
-                                    "setTimeout(() => {" +
-                                    "console.log('Executing in timeout');" +
-                                    "mediaCheck();" +
-                                    "document.onclick = function(){" +
-                                    "    console.log('REceived document onClick');" +
-                                    "    mediaCheck();" +
-                                    "};" +
-                                    "function mediaCheck(){" +
-                                    "    console.log('Length of app-list-view ', document.getElementsByTagName('app-list-view').length);" +
-                                    "    for(var i = 0; i < document.getElementsByTagName('app-list-view').length; i++){" +
-                                    "       document.getElementsByTagName('app-list-view')[i].getElementsByClassName('list__item')[0].onclick = () => { " +
-                                    "           console.log('Triggered onClick of listview');" +
-                                    "           var playPause = document.getElementsByClassName('amplitude-play-pause');" +
-                                    "           if (playPause.length > 0) {" +
-                                    "               console.log('playpause length greater than 0');" +
-                                    "               mediaElement = playPause[0];" +
-                                    "               playPause[0].onclick = () => {" +
-                                    "                   console.log('Received onClick of playpause');" +
-                                    "                   JSOUT.mediaAction();" +
-                                    "               }" +
-                                    "           }" +
+        webDisplayer.setWebChromeClient(new WebChromeClient() {
 
-                                    "           JSOUT.clickedOnItem();" +
-                                    "       };" +
-                                    "    }" +
-                                    "}}, 1000)";
-                            webDisplayer.evaluateJavascript(code, null);
-                        }
-                    }
+            @Override
+            public void onProgressChanged(WebView view, int newProgress) {
+                super.onProgressChanged(view, newProgress);
+                if (newProgress == 100) {
+                    String code = "var currentNumber = -1;" +
+                            "var mediaElement;" +
+                            "setTimeout(() => {" +
+                            "console.log('Executing in timeout');" +
+                            "mediaCheck();" +
+                            "document.onclick = function(){" +
+                            "    console.log('REceived document onClick');" +
+                            "    mediaCheck();" +
+                            "};" +
+                            "function mediaCheck(){" +
+                            "    console.log('Length of app-list-view ', document.getElementsByTagName('app-list-view').length);" +
+                            "    for(var i = 0; i < document.getElementsByTagName('app-list-view').length; i++){" +
+                            "       document.getElementsByTagName('app-list-view')[i].getElementsByClassName('list__item')[0].onclick = () => { " +
+                            "           console.log('Triggered onClick of listview');" +
+                            "           var playPause = document.getElementsByClassName('amplitude-play-pause');" +
+                            "           if (currentNumber == i) {" +
+                            "               JSOUT.mediaAction();" +
+                            "               return;" +
+                            "           }" +
+                            "           currentNumber = i;" +
+                            "           if (playPause.length > 0) {" +
+                            "               console.log('playpause length greater than 0');" +
+                            "               mediaElement = playPause[0];" +
+                            "               playPause[0].onclick = () => {" +
+                            "                   console.log('Received onClick of playpause');" +
+                            "                   JSOUT.mediaAction();" +
+                            "               }" +
+                            "           }" +
 
-                    @Override
-                    public void onReceivedIcon(WebView view, Bitmap icon) {
-                        super.onReceivedIcon(view, icon);
-                        img = icon;
-                    }
-
-                    @Override
-                    public void onReceivedTitle(WebView view, String title) {
-                        super.onReceivedTitle(view, title);
-                        webTitle = title;
-                    }
-                });
-
-                webDisplayer.getSettings().setLoadsImagesAutomatically(true);
-                webDisplayer.getSettings().setJavaScriptEnabled(true);
-                webDisplayer.getSettings().setBuiltInZoomControls(true);
-                webDisplayer.getSettings().setDomStorageEnabled(true);
-                webDisplayer.setLayerType(View.LAYER_TYPE_HARDWARE, null);
-                webDisplayer.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
-                webDisplayer.addJavascriptInterface(new JSInterface(this), "JSOUT");
-                webDisplayer.setClickable(true);
-                wv = webDisplayer;
-            } else {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
+                            "           JSOUT.clickedOnItem();" +
+                            "       };" +
+                            "    }" +
+                            "}}, 1000)";
+                    webDisplayer.evaluateJavascript(code, null);
                 }
             }
-        }
+
+            @Override
+            public void onReceivedIcon(WebView view, Bitmap icon) {
+                super.onReceivedIcon(view, icon);
+                img = icon;
+            }
+
+            @Override
+            public void onReceivedTitle(WebView view, String title) {
+                super.onReceivedTitle(view, title);
+                webTitle = title;
+            }
+        });
+
+        webDisplayer.getSettings().setLoadsImagesAutomatically(true);
+        webDisplayer.getSettings().setJavaScriptEnabled(true);
+        webDisplayer.getSettings().setBuiltInZoomControls(true);
+        webDisplayer.getSettings().setDomStorageEnabled(true);
+        webDisplayer.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        webDisplayer.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+        webDisplayer.addJavascriptInterface(new JSInterface(this), "JSOUT");
+        webDisplayer.setClickable(true);
+        wv = webDisplayer;
+    }
 }
