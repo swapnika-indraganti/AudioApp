@@ -7,10 +7,7 @@ import android.content.Intent;
 public class NotificationListener extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (JSInterface.playing) {
-            MainActivity.wv.evaluateJavascript("mediaElement.pause();", null);
-        } else {
-            MainActivity.wv.evaluateJavascript("mediaElement.play();", null);
-        }
+            MainActivity.wv.evaluateJavascript("mediaElement.click();mediaElement.dispatchEvent(new TouchEvent('touchstart', { bubbles: true, cancelable: true }));" +
+                    "mediaElement.dispatchEvent(new TouchEvent('touchend', { bubbles: true, cancelable: true }));", null);
     }
 }

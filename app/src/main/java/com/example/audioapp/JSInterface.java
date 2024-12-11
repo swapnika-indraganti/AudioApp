@@ -6,7 +6,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.widget.RemoteViews;
 
@@ -22,8 +21,8 @@ public class JSInterface {
     }
 
     @JavascriptInterface
-    public void mediaAction(String type) {Log.e("Info", type);
-        playing = Boolean.parseBoolean(type);
+    public void mediaAction() {
+        playing = !playing;
         if (playing) {
             createNotificationChannel();
 
@@ -77,6 +76,12 @@ public class JSInterface {
                     (NotificationManager) mContext.getSystemService(Context.NOTIFICATION_SERVICE);
             notificationManager.notify(0, builder.build());
         }
+    }
+
+    @JavascriptInterface
+    public void clickedOnItem() {
+        playing = false;
+        mediaAction();
     }
 
     private void createNotificationChannel() {
